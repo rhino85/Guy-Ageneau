@@ -12,22 +12,6 @@ function chess1(step, dev){  //creer une grille d'echec
 				grid[grid.length-1].push(new function point(){  //on ajoute au sous tableau en cours un objet point 
 					this.i = grid.length - 1;					//index i du point
 					this.j = grid[grid.length - 1].length;		//index j du point
-
-					/*
-					if(grid[this.i - 1] != undefined){    //si on est pas dans la premiere colonne
-						this.wy = grid[this.i-1][this.j].wy + Math.random()*8 - 4;       	//on additionne a la deviation verticale du point de gauche une nouvelle deviation verticale
-					}
-					else{
-							this.wy=Math.random()*8 - 4;									//sinon on init la dev verticale
-					}
-					if(grid[this.i][this.j - 1] != undefined){		//si on est pas dans la première ligne 
-							this.wx = grid[this.i][this.j-1].wx + Math.random()*8 - 4;		//on additionne  à la deviation horizontale du point du dessus une nouvelle dev horzl
-					}
-					else{
-						this.wx=Math.random()*8 - 4;
-					}
-					*/
-
 					
 					if(grid[this.i - 1] != undefined){    //si on est pas dans la premiere colonne
 						this.wy = (grid[this.i-1][this.j].wy + grid[this.i-1][this.j].wx)/2 + (Math.random()*dev - dev/2);       	//on additionne a la deviation verticale du point de gauche une nouvelle deviation verticale
@@ -41,20 +25,8 @@ function chess1(step, dev){  //creer une grille d'echec
 					else{
 						this.wx=Math.random()*dev - dev/2;
 					}
-					
-					/*
-					if(grid[this.i - 1] != undefined){          //si on est pas dans la premiere colonne
-						this.wx = grid[this.i-1][this.j].wx + Math.random()*8 - 4;  	//on additionne a la deviation horizontale du point de gauche une nouvelle deviation horizontale
-					}		
-					else{
-						this.wx=Math.random()*8 - 4;			//sinon on initialise la deviation horizontale
-					}
-					if(grid[this.i][this.j - 1] != undefined){	//si on est pas dans la premiere ligne
-							this.wy = grid[this.i][this.j-1].wy + Math.random()*8 - 4; 	//on additionne à la deviation verticale du point du dessus une nouvelle deviation verticale
-					}
-					else{
-						this.wy=Math.random()*8 - 4;			//sinon on initialise la deviation verticale
-					}*/
+
+
 					this.point = new paper.Point(i + this.wx, j + this.wy);				//on creer le point en tenant compte des deviations calculees
 
 
@@ -64,29 +36,28 @@ function chess1(step, dev){  //creer une grille d'echec
 					*/
 					if(grid[this.i][0] === undefined){  //si le premier point de la COLONNE n'a pas été créé (et le trait associé) aka si on est entrain de s'occuper de ce fameux point
 						this.pathV = new paper.Path(this.point);	//on créer le trait
-						this.pathV.strokeColor = "black";
+						//this.pathV.strokeColor = "black";
 					}
 					else{								//sinon on ajoute le point actuel au trait
 						grid[this.i][0].pathV.add(this.point);      
-						grid[this.i][0].pathV.smooth({ type: 'continuous' });
+						//grid[this.i][0].pathV.smooth({ type: 'continuous' });
 					}
 
 					if(grid[0][this.j] === undefined){  //si le premier point de la LIGNE n'a pas été créé (et le trait associé) aka si on est entrain de s'occuper de ce fameux point
 						this.pathH = new paper.Path(this.point);	//on créer le trait
-						this.pathH.strokeColor = "black";
+						//this.pathH.strokeColor = "black";
 					}
 					else{
 						grid[0][this.j].pathH.add(this.point);      //sinon on ajoute le point actuel au trait
 						grid[0][this.j].pathH.smooth({ type: 'continuous' });
 					}
 
-								//pathtest.add(this.point); //ajouter chaque point au bon path ça resoud pas le problème du remplissage
+					
+					/*
+					pour le remplissage :
+					passer des lignes aux bandes ("closed path") puis methode paperjs booleennes 
 
-								/*
-								pour le remplissage :
-								passer des lignes aux bandes ("closed path") puis methode paperjs booleennes 
-
-								*/
+					*/
 					//this.dot = new paper.Path.Circle(this.point, 1);
 					//this.dot.fillColor = 'black';
 				});
@@ -94,13 +65,53 @@ function chess1(step, dev){  //creer une grille d'echec
 			}
 		}
 
-		for (var i = grid.length - 1; i >= grid.length-1; i = i-2) {
-			//grid[i][0].pathV.addSegments(grid[i-1][0].pathV.segments);
+		for (var i = 0; i <= grid.length-1; i = i + 2) {
+			grid[i][0].pathV.smooth({ type: 'continuous' });
+			//grid[i][0].pathV.reverse();
+			grid[i][0].bit1 = new paper.Path(grid[0][grid[0].length - 1].pathH.segments.slice(i, i+2));
+			//grid[i][0].bit1.reverse();
+			grid[i][0].pathV.addSegments(grid[i][0].bit1.segments);
+			//grid[i][0].pathV = grid[i][0].pathV.unite(grid[i][0].bit1);
+			if(grid[i+1] !== undefined){
+				grid[i+1][0].pathV.smooth({ type: 'continuous' });
+				grid[i+1][0].pathV.reverse();
+				grid[i][0].pathV.addSegments(grid[i+1][0].pathV.segments);
+				//grid[i][0].pathV = grid[i][0].pathV.unite(grid[i+1][0].pathV);
+
+				grid[i][0].bit2 = new paper.Path(grid[0][0].pathH.segments.slice(i, i+2));
+				//grid[i][0].bit2.selected = true;
+				grid[i][0].bit2.reverse();
+				grid[i][0].pathV.addSegments(grid[i][0].bit2.segments);
+				//grid[i][0].pathV = grid[i][0].pathV.unite(grid[i][0].bit2);
+				//grid[i][0].pathV.clockwise =false;
+				//grid[i][0].pathV.unite(grid[i][0].pathV);
+				//grid[i][0].pathV.reorient();
+				//grid[i][0].pathV.closed = true;
+			}
+			//ça marche pas c'est la galère... utiliser compoundpath??? ou unite/join
+
+			//j'y arrive toujours pas.... creer des carrés????
+			//faire pause reflexion, c'est relou
+				
+
+			//console.log(grid[i][0].pathV.segments);
+			//grid[i][0].pathV.reorient(1);
 			//grid[i][0].pathV.selected = true;
+			//grid[i][0].pathV.strokeColor = 'black';
+			//grid[i][0].pathV.closed = true;
+			//grid[i][0].pathV.fillRule = 'evenodd';
+
+			grid[i][0].pathV.fillColor = "blue";
+			console.log(grid[i][0].pathV);
+			//grid[i][0].pathV.selected = 1;
+			
+
 		}
+
+
 		//pathtest.strokeColor = "black";
 		
-		console.log(grid)
+		//console.log(grid)
 		return this;
 	}
 
@@ -108,14 +119,19 @@ function chess1(step, dev){  //creer une grille d'echec
 
 
 
-var step = Math.random()*20 + 5;
-var dev =4;
-console.log("step : " + step + " dev : " + dev);
-chess1(step, dev);
 var blip = Math.random()*40;
 var blip2 = Math.random()*20;
 var blip3 = Math.random();
-setInterval(function(){
+
+	paper.project.clear();
+	var step = 40;
+	var dev =20;
+	console.log("step : " + step + " dev : " + dev);
+	chess1(step, dev);
+
+	
+
+/*setInterval(function(){
 
 	paper.project.clear();
 	var step = Math.random()*blip + 5;
@@ -129,12 +145,12 @@ setInterval(function(){
 		blip2 = Math.random()*20;
 		blip3=Math.random();
 	}
-}, 5000)
+}, 5000)*/
 
 document.getElementById('canvas').onclick = function(){
 	paper.project.clear();
-var step = Math.random()*blip + 5;
-	var dev =Math.random()*blip2;
+	var step = Math.random()*blip + 15;
+	var dev =Math.random()*blip2 + 5;
 	console.log("step : " + step + " dev : " + dev);
 	chess1(step, dev);
 

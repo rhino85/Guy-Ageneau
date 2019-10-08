@@ -5,6 +5,7 @@ body{
 
 /* Scale canvas with resize attribute to full size */
 #canvas {
+	display:block;
     width: 500px;
     height: 500px;
     margin: auto;
